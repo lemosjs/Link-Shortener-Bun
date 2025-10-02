@@ -1,0 +1,21 @@
+{
+  "name": "bun-link-shortener",
+  "version": "1.0.0",
+  "description": "Simple link shortener using Bun, Hono, and SQLite",
+  "main": "index.ts",
+  "scripts": {
+    "start": "bun run index.ts",
+    "dev": "bun --watch index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.8.5"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "@types/bun": "latest"
+  },
+  "private": true,
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
