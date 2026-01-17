@@ -3,167 +3,827 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Link Shortener Admin</title>
+  <title>LINKCTRL // Admin Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-panel: #12121a;
+      --bg-card: #1a1a24;
+      --cyan: #00fff2;
+      --cyan-dim: #00b8b0;
+      --magenta: #ff00aa;
+      --magenta-dim: #b0007a;
+      --green: #00ff88;
+      --yellow: #ffee00;
+      --text: #e0e0e8;
+      --text-dim: #6a6a7a;
+      --border: #2a2a3a;
+      --glow-cyan: 0 0 20px rgba(0, 255, 242, 0.4), 0 0 40px rgba(0, 255, 242, 0.2);
+      --glow-magenta: 0 0 20px rgba(255, 0, 170, 0.4), 0 0 40px rgba(255, 0, 170, 0.2);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
+    html {
+      font-size: 14px;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a2e;
-      color: #eee;
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* CRT Scanline Effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.1) 0px,
+        rgba(0, 0, 0, 0.1) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      z-index: 9999;
+    }
+
+    /* Noise texture overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      z-index: 9998;
+    }
+
+    /* Login Screen */
+    .login-wrapper {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-    .container {
-      background: #16213e;
       padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      background:
+        radial-gradient(ellipse at 20% 80%, rgba(0, 255, 242, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(255, 0, 170, 0.08) 0%, transparent 50%),
+        var(--bg-deep);
+    }
+
+    .login-container {
       width: 100%;
-      max-width: 450px;
+      max-width: 420px;
+      animation: fadeSlideUp 0.6s ease-out;
     }
-    h1 {
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-logo {
       text-align: center;
-      margin-bottom: 1.5rem;
-      color: #e94560;
+      margin-bottom: 3rem;
     }
+
+    .login-logo h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--magenta) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: var(--glow-cyan);
+      margin-bottom: 0.5rem;
+    }
+
+    .login-logo .subtitle {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .login-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      position: relative;
+    }
+
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    }
+
+    .corner {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--cyan);
+    }
+    .corner-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+    .corner-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+    .corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+    .corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
     .form-group {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
+
     label {
       display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--cyan);
+      margin-bottom: 0.75rem;
     }
-    input {
+
+    input[type="password"],
+    input[type="text"],
+    input[type="url"] {
       width: 100%;
-      padding: 0.75rem;
-      border: 2px solid #0f3460;
-      border-radius: 6px;
-      background: #1a1a2e;
-      color: #fff;
+      padding: 1rem 1.25rem;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
       font-size: 1rem;
+      transition: all 0.2s ease;
     }
+
     input:focus {
       outline: none;
-      border-color: #e94560;
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(0, 255, 242, 0.1), inset 0 0 20px rgba(0, 255, 242, 0.05);
     }
-    button {
+
+    input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .btn {
       width: 100%;
-      padding: 0.85rem;
-      background: #e94560;
+      padding: 1rem 2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
       border: none;
-      border-radius: 6px;
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
     }
-    button:hover {
-      background: #ff6b6b;
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan-dim) 0%, var(--cyan) 100%);
+      color: var(--bg-deep);
     }
-    button:disabled {
-      background: #555;
-      cursor: not-allowed;
+
+    .btn-primary:hover {
+      box-shadow: var(--glow-cyan);
+      transform: translateY(-2px);
     }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--magenta);
+      color: var(--magenta);
+    }
+
+    .btn-secondary:hover {
+      background: var(--magenta);
+      color: var(--bg-deep);
+      box-shadow: var(--glow-magenta);
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::after {
+      left: 100%;
+    }
+
     .message {
-      padding: 0.75rem;
-      border-radius: 6px;
-      margin-top: 1rem;
-      text-align: center;
+      padding: 1rem;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      border-left: 3px solid;
     }
-    .message.success {
-      background: #1b4332;
-      color: #95d5b2;
-    }
+
     .message.error {
-      background: #5c1a1a;
-      color: #ff8585;
+      background: rgba(255, 0, 100, 0.1);
+      border-color: var(--magenta);
+      color: #ff6699;
     }
-    .result-link {
-      margin-top: 0.5rem;
-      word-break: break-all;
+
+    .message.success {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: var(--green);
+      color: var(--green);
     }
-    .result-link a {
-      color: #e94560;
-    }
-    #loginSection, #createSection {
+
+    /* Dashboard */
+    .dashboard {
       display: none;
+      min-height: 100vh;
     }
-    #loginSection.active, #createSection.active {
+
+    .dashboard.active {
       display: block;
     }
+
+    .login-wrapper.hidden {
+      display: none;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--cyan);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .btn-logout {
+      padding: 0.5rem 1rem;
+      font-size: 0.7rem;
+      background: transparent;
+      border: 1px solid var(--text-dim);
+      color: var(--text-dim);
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      border-color: var(--magenta);
+      color: var(--magenta);
+    }
+
+    /* Main Content */
+    .main {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      animation: fadeSlideUp 0.5s ease-out backwards;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+    }
+
+    .stat-card.cyan::before { background: var(--cyan); }
+    .stat-card.magenta::before { background: var(--magenta); }
+    .stat-card.green::before { background: var(--green); }
+
+    .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-card.cyan .stat-value { color: var(--cyan); }
+    .stat-card.magenta .stat-value { color: var(--magenta); }
+    .stat-card.green .stat-value { color: var(--green); }
+
+    /* Panels */
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    .panel-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .panel-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .panel-title::before {
+      content: '>';
+      color: var(--magenta);
+    }
+
+    .panel-body {
+      padding: 1.5rem;
+    }
+
+    /* Create Form */
+    .create-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    @media (max-width: 768px) {
+      .create-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .slug-preview {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+    }
+
+    .slug-preview span {
+      color: var(--cyan);
+    }
+
+    /* Search */
+    .search-box {
+      position: relative;
+      width: 300px;
+    }
+
+    .search-box input {
+      padding-left: 2.5rem;
+      width: 100%;
+    }
+
+    .search-box::before {
+      content: '>';
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-weight: bold;
+    }
+
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead {
+      background: var(--bg-deep);
+    }
+
+    th {
+      padding: 1rem 1.5rem;
+      text-align: left;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr {
+      transition: background 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(0, 255, 242, 0.03);
+    }
+
+    .slug-cell {
+      font-weight: 600;
+      color: var(--cyan);
+    }
+
+    .slug-cell a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .slug-cell a:hover {
+      text-decoration: underline;
+    }
+
+    .url-cell {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-dim);
       font-size: 0.85rem;
-      color: #888;
-      margin-top: 0.25rem;
+    }
+
+    .clicks-cell {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      color: var(--green);
+    }
+
+    .date-cell {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    /* Click bar visualization */
+    .click-bar-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .click-bar {
+      width: 80px;
+      height: 6px;
+      background: var(--bg-deep);
+      overflow: hidden;
+    }
+
+    .click-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+      transition: width 0.5s ease;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .pagination button {
+      padding: 0.5rem 1rem;
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .pagination .page-info {
+      padding: 0 1rem;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-dim);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      color: var(--text-dim);
+    }
+
+    .loading::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      margin-left: 1rem;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Blink animation for terminal feel */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .cursor-blink {
+      animation: blink 1s step-end infinite;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .header {
+        padding: 1rem;
+      }
+      .main {
+        padding: 1rem;
+      }
+      .panel-header {
+        padding: 1rem;
+      }
+      .panel-body {
+        padding: 1rem;
+      }
+      th, td {
+        padding: 0.75rem 1rem;
+      }
+      .search-box {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Link Shortener</h1>
-
-    <div id="loginSection" class="active">
-      <form id="loginForm">
-        <div class="form-group">
-          <label for="password">Admin Password</label>
-          <input type="password" id="password" placeholder="Enter password" required>
-        </div>
-        <button type="submit">Login</button>
-        <div id="loginMessage"></div>
-      </form>
-    </div>
-
-    <div id="createSection">
-      <form id="createForm">
-        <div class="form-group">
-          <label for="url">Original URL</label>
-          <input type="url" id="url" placeholder="https://example.com" required>
-        </div>
-        <div class="form-group">
-          <label for="slug">Custom Slug</label>
-          <input type="text" id="slug" placeholder="my-custom-slug" pattern="^[a-zA-Z0-9_-]+$" required>
-          <div class="slug-preview" id="slugPreview"></div>
-        </div>
-        <button type="submit">Create Short Link</button>
-        <div id="createMessage"></div>
-      </form>
+  <!-- Login Screen -->
+  <div class="login-wrapper" id="loginWrapper">
+    <div class="login-container">
+      <div class="login-logo">
+        <h1>LINKCTRL</h1>
+        <div class="subtitle">Admin Terminal v1.0</div>
+      </div>
+      <div class="login-box">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        <form id="loginForm">
+          <div class="form-group">
+            <label>Access Code</label>
+            <input type="password" id="password" placeholder="Enter admin password" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary">Initialize Session</button>
+          <div id="loginMessage"></div>
+        </form>
+      </div>
     </div>
   </div>
 
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard">
+    <header class="header">
+      <div class="header-logo">LINKCTRL</div>
+      <div class="header-actions">
+        <button class="btn-logout" id="logoutBtn">[ LOGOUT ]</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card cyan">
+          <div class="stat-label">Total Links</div>
+          <div class="stat-value" id="statTotalLinks">0</div>
+        </div>
+        <div class="stat-card magenta">
+          <div class="stat-label">Total Clicks</div>
+          <div class="stat-value" id="statTotalClicks">0</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Avg Clicks/Link</div>
+          <div class="stat-value" id="statAvgClicks">0</div>
+        </div>
+      </div>
+
+      <!-- Create Link Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Create New Link</div>
+        </div>
+        <div class="panel-body">
+          <form id="createForm" class="create-form">
+            <div class="form-group" style="margin:0">
+              <label>Destination URL</label>
+              <input type="url" id="url" placeholder="https://example.com/your-long-url" required>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Custom Slug</label>
+              <input type="text" id="slug" placeholder="my-custom-slug" pattern="^[a-zA-Z0-9_-]+$" required>
+              <div class="slug-preview" id="slugPreview"></div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="height:fit-content">Create</button>
+          </form>
+          <div id="createMessage"></div>
+        </div>
+      </div>
+
+      <!-- Links Table Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Link Registry</div>
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search slugs or URLs...">
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Slug</th>
+                <th>Destination</th>
+                <th>Clicks</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="linksTableBody">
+              <tr>
+                <td colspan="4" class="loading">Loading data</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </main>
+  </div>
+
   <script>
-    const loginSection = document.getElementById('loginSection');
-    const createSection = document.getElementById('createSection');
+    // State
+    let authToken = sessionStorage.getItem('authToken');
+    let currentPage = 1;
+    let totalPages = 1;
+    let searchQuery = '';
+    let searchTimeout = null;
+    let maxClicks = 1;
+
+    // DOM Elements
+    const loginWrapper = document.getElementById('loginWrapper');
+    const dashboard = document.getElementById('dashboard');
     const loginForm = document.getElementById('loginForm');
     const createForm = document.getElementById('createForm');
     const loginMessage = document.getElementById('loginMessage');
     const createMessage = document.getElementById('createMessage');
     const slugInput = document.getElementById('slug');
     const slugPreview = document.getElementById('slugPreview');
+    const searchInput = document.getElementById('searchInput');
+    const linksTableBody = document.getElementById('linksTableBody');
+    const paginationEl = document.getElementById('pagination');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-    let authToken = sessionStorage.getItem('authToken');
+    // Stats elements
+    const statTotalLinks = document.getElementById('statTotalLinks');
+    const statTotalClicks = document.getElementById('statTotalClicks');
+    const statAvgClicks = document.getElementById('statAvgClicks');
 
+    // Initialize
     if (authToken) {
-      loginSection.classList.remove('active');
-      createSection.classList.add('active');
+      showDashboard();
     }
 
+    // Slug preview
     slugInput.addEventListener('input', () => {
       const slug = slugInput.value.trim();
       if (slug) {
-        slugPreview.textContent = `Preview: ${window.location.origin}/${slug}`;
+        slugPreview.innerHTML = `${window.location.origin}/<span>${slug}</span>`;
       } else {
-        slugPreview.textContent = '';
+        slugPreview.innerHTML = '';
       }
     });
 
+    // Search with debounce
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchQuery = searchInput.value.trim();
+        currentPage = 1;
+        loadLinks();
+      }, 300);
+    });
+
+    // Login
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const password = document.getElementById('password').value;
@@ -180,21 +840,29 @@
         if (res.ok) {
           authToken = data.token;
           sessionStorage.setItem('authToken', authToken);
-          loginSection.classList.remove('active');
-          createSection.classList.add('active');
-          loginMessage.innerHTML = '';
+          showDashboard();
         } else {
-          loginMessage.innerHTML = `<div class="message error">${data.error}</div>`;
+          loginMessage.innerHTML = `<div class="message error">${data.error || 'Access denied'}</div>`;
         }
       } catch (err) {
-        loginMessage.innerHTML = `<div class="message error">Connection error</div>`;
+        loginMessage.innerHTML = `<div class="message error">Connection failed</div>`;
       }
     });
 
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('authToken');
+      authToken = null;
+      loginWrapper.classList.remove('hidden');
+      dashboard.classList.remove('active');
+      document.getElementById('password').value = '';
+    });
+
+    // Create link
     createForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const url = document.getElementById('url').value;
-      const slug = document.getElementById('slug').value.trim();
+      const slug = slugInput.value.trim();
 
       try {
         const res = await fetch('/admin/create', {
@@ -211,29 +879,169 @@
         if (res.ok) {
           createMessage.innerHTML = `
             <div class="message success">
-              Link created successfully!
-              <div class="result-link">
-                <a href="${data.short_url}" target="_blank">${data.short_url}</a>
-              </div>
+              Link created: <a href="${data.short_url}" target="_blank" style="color:inherit">${data.short_url}</a>
             </div>
           `;
           createForm.reset();
-          slugPreview.textContent = '';
+          slugPreview.innerHTML = '';
+          loadLinks();
         } else {
           if (res.status === 401) {
-            sessionStorage.removeItem('authToken');
-            authToken = null;
-            loginSection.classList.add('active');
-            createSection.classList.remove('active');
-            loginMessage.innerHTML = `<div class="message error">Session expired. Please login again.</div>`;
+            handleUnauthorized();
           } else {
             createMessage.innerHTML = `<div class="message error">${data.error}</div>`;
           }
         }
       } catch (err) {
-        createMessage.innerHTML = `<div class="message error">Connection error</div>`;
+        createMessage.innerHTML = `<div class="message error">Connection failed</div>`;
       }
     });
+
+    function showDashboard() {
+      loginWrapper.classList.add('hidden');
+      dashboard.classList.add('active');
+      loadLinks();
+    }
+
+    function handleUnauthorized() {
+      sessionStorage.removeItem('authToken');
+      authToken = null;
+      loginWrapper.classList.remove('hidden');
+      dashboard.classList.remove('active');
+      loginMessage.innerHTML = `<div class="message error">Session expired</div>`;
+    }
+
+    async function loadLinks() {
+      linksTableBody.innerHTML = '<tr><td colspan="4" class="loading">Loading data</td></tr>';
+
+      try {
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: 20
+        });
+        if (searchQuery) params.set('search', searchQuery);
+
+        const res = await fetch(`/admin/links?${params}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (res.status === 401) {
+          handleUnauthorized();
+          return;
+        }
+
+        const data = await res.json();
+
+        // Update stats
+        animateNumber(statTotalLinks, data.stats?.totalLinks || 0);
+        animateNumber(statTotalClicks, data.stats?.totalClicks || 0);
+        const avg = data.stats?.totalLinks ? (data.stats.totalClicks / data.stats.totalLinks).toFixed(1) : '0';
+        statAvgClicks.textContent = avg;
+
+        // Calculate max clicks for bar visualization
+        maxClicks = Math.max(1, ...data.links.map(l => l.clicks));
+
+        // Update table
+        if (data.links.length === 0) {
+          linksTableBody.innerHTML = `
+            <tr>
+              <td colspan="4" class="empty-state">
+                <div class="empty-state-icon">[ ]</div>
+                <div>${searchQuery ? 'No links match your search' : 'No links created yet'}</div>
+              </td>
+            </tr>
+          `;
+        } else {
+          linksTableBody.innerHTML = data.links.map((link, i) => `
+            <tr style="animation: fadeSlideUp 0.3s ease-out ${i * 0.03}s backwards">
+              <td class="slug-cell">
+                <a href="/${link.short_code}" target="_blank">/${link.short_code}</a>
+              </td>
+              <td class="url-cell" title="${escapeHtml(link.original_url)}">${escapeHtml(link.original_url)}</td>
+              <td>
+                <div class="click-bar-wrapper">
+                  <span class="clicks-cell">${link.clicks.toLocaleString()}</span>
+                  <div class="click-bar">
+                    <div class="click-bar-fill" style="width: ${(link.clicks / maxClicks) * 100}%"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="date-cell">${formatDate(link.created_at)}</td>
+            </tr>
+          `).join('');
+        }
+
+        // Update pagination
+        totalPages = data.pagination.totalPages;
+        renderPagination(data.pagination);
+
+      } catch (err) {
+        linksTableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state">
+              <div class="message error">Failed to load links</div>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function renderPagination(pagination) {
+      if (pagination.totalPages <= 1) {
+        paginationEl.innerHTML = '';
+        return;
+      }
+
+      paginationEl.innerHTML = `
+        <button onclick="goToPage(1)" ${pagination.page === 1 ? 'disabled' : ''}><<</button>
+        <button onclick="goToPage(${pagination.page - 1})" ${pagination.page === 1 ? 'disabled' : ''}><</button>
+        <span class="page-info">Page ${pagination.page} of ${pagination.totalPages}</span>
+        <button onclick="goToPage(${pagination.page + 1})" ${pagination.page >= pagination.totalPages ? 'disabled' : ''}>></button>
+        <button onclick="goToPage(${pagination.totalPages})" ${pagination.page >= pagination.totalPages ? 'disabled' : ''}>>></button>
+      `;
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      loadLinks();
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function animateNumber(element, target) {
+      const start = parseInt(element.textContent) || 0;
+      const duration = 500;
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * eased);
+        element.textContent = current.toLocaleString();
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      requestAnimationFrame(update);
+    }
   </script>
 </body>
 </html>

@@ -271,28 +271,51 @@ app.get('/stats/:code', (c) => {
   return c.json(link)
 })
 
-// Get all links (optional admin endpoint) with pagination
+// Get all links (authenticated admin endpoint) with pagination
 app.get('/admin/links', (c) => {
+  const authHeader = c.req.header('Authorization')
+
+  if (!validateToken(authHeader)) {
+    return c.json({ error: 'Unauthorized' } as ErrorResponse, 401)
+  }
+
   // Parse pagination query params
   const page = parseInt(c.req.query('page') || '1', 10)
-  const limit = parseInt(c.req.query('limit') || '20', 10)
+  const limit = parseInt(c.req.query('limit') || '50', 10)
   const offset = (page - 1) * limit
+  const search = c.req.query('search') || ''
 
   //If not valid integer, return 400
   if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
     return c.json({ error: 'Invalid pagination parameters' } as ErrorResponse, 400)
   }
 
-  // Get total count for pagination info
-  const total = db.query(`SELECT COUNT(*) as count FROM links`).get() as { count: number }
+  // Build query based on search
+  let links: Link[]
+  let total: { count: number }
 
-  // Get paginated links
-  const links = db.query(`
-    SELECT short_code, original_url, created_at, clicks 
-    FROM links 
-    ORDER BY created_at DESC
-    LIMIT ? OFFSET ?
-  `).all(limit, offset) as Link[]
+  if (search) {
+    const searchPattern = `%${search}%`
+    total = db.query(`SELECT COUNT(*) as count FROM links WHERE short_code LIKE ? OR original_url LIKE ?`).get(searchPattern, searchPattern) as { count: number }
+    links = db.query(`
+      SELECT short_code, original_url, created_at, clicks
+      FROM links
+      WHERE short_code LIKE ? OR original_url LIKE ?
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `).all(searchPattern, searchPattern, limit, offset) as Link[]
+  } else {
+    total = db.query(`SELECT COUNT(*) as count FROM links`).get() as { count: number }
+    links = db.query(`
+      SELECT short_code, original_url, created_at, clicks
+      FROM links
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `).all(limit, offset) as Link[]
+  }
+
+  // Get total clicks across all links
+  const totalClicks = db.query(`SELECT SUM(clicks) as total FROM links`).get() as { total: number | null }
 
   return c.json({
     links,
@@ -301,6 +324,10 @@ app.get('/admin/links', (c) => {
       limit,
       total: total?.count ?? 0,
       totalPages: Math.ceil((total?.count ?? 0) / limit)
+    },
+    stats: {
+      totalLinks: total?.count ?? 0,
+      totalClicks: totalClicks?.total ?? 0
     }
   })
 })
