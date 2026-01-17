@@ -14,6 +14,15 @@ interface ShortenRequest {
   url: string
 }
 
+interface CustomSlugRequest {
+  url: string
+  slug: string
+}
+
+interface AuthRequest {
+  password: string
+}
+
 interface ShortenResponse {
   short_code: string
   short_url: string
@@ -58,6 +67,34 @@ function isValidUrl(string: string): boolean {
   } catch (_) {
     return false
   }
+}
+
+// Admin password from env with default
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'doppy'
+
+// Simple token storage (in production, use proper JWT or session management)
+const validTokens = new Set<string>()
+
+function generateToken(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let token = ''
+  for (let i = 0; i < 32; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return token
+}
+
+function validateToken(authHeader: string | undefined): boolean {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return false
+  }
+  const token = authHeader.substring(7)
+  return validTokens.has(token)
+}
+
+// Validate slug format (alphanumeric, hyphens, underscores)
+function isValidSlug(slug: string): boolean {
+  return /^[a-zA-Z0-9_-]+$/.test(slug) && slug.length >= 1 && slug.length <= 50
 }
 
 // Root endpoint
@@ -110,6 +147,82 @@ app.post('/shorten', async (c) => {
       original_url: url
     } as ShortenResponse)
     
+  } catch (error) {
+    return c.json({ error: 'Invalid JSON or server error' } as ErrorResponse, 400)
+  }
+})
+
+// Serve admin page
+app.get('/admin', async (c) => {
+  const file = Bun.file('./admin.html')
+  const html = await file.text()
+  return c.html(html)
+})
+
+// Admin authentication
+app.post('/admin/auth', async (c) => {
+  try {
+    const body = await c.req.json() as AuthRequest
+    const { password } = body
+
+    if (password === ADMIN_PASSWORD) {
+      const token = generateToken()
+      validTokens.add(token)
+      return c.json({ token })
+    }
+
+    return c.json({ error: 'Invalid password' } as ErrorResponse, 401)
+  } catch (error) {
+    return c.json({ error: 'Invalid request' } as ErrorResponse, 400)
+  }
+})
+
+// Create link with custom slug (authenticated)
+app.post('/admin/create', async (c) => {
+  const authHeader = c.req.header('Authorization')
+
+  if (!validateToken(authHeader)) {
+    return c.json({ error: 'Unauthorized' } as ErrorResponse, 401)
+  }
+
+  try {
+    const body = await c.req.json() as CustomSlugRequest
+    const { url, slug } = body
+
+    if (!url) {
+      return c.json({ error: 'URL is required' } as ErrorResponse, 400)
+    }
+
+    if (!isValidUrl(url)) {
+      return c.json({ error: 'Invalid URL format' } as ErrorResponse, 400)
+    }
+
+    if (!slug) {
+      return c.json({ error: 'Slug is required' } as ErrorResponse, 400)
+    }
+
+    if (!isValidSlug(slug)) {
+      return c.json({ error: 'Invalid slug format. Use only letters, numbers, hyphens, and underscores (1-50 chars)' } as ErrorResponse, 400)
+    }
+
+    // Check if slug already exists
+    const existing = db.query('SELECT id FROM links WHERE short_code = ?').get(slug)
+    if (existing) {
+      return c.json({ error: 'This slug is already taken' } as ErrorResponse, 409)
+    }
+
+    // Insert into database
+    const insertStmt = db.prepare('INSERT INTO links (short_code, original_url) VALUES (?, ?)')
+    insertStmt.run(slug, url)
+
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+
+    return c.json({
+      short_code: slug,
+      short_url: `${baseUrl}/${slug}`,
+      original_url: url
+    } as ShortenResponse)
+
   } catch (error) {
     return c.json({ error: 'Invalid JSON or server error' } as ErrorResponse, 400)
   }

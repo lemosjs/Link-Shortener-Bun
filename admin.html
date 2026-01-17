@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link Shortener Admin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: #16213e;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 450px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #e94560;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #0f3460;
+      border-radius: 6px;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 1rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: #e94560;
+    }
+    button {
+      width: 100%;
+      padding: 0.85rem;
+      background: #e94560;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    .message {
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    .message.success {
+      background: #1b4332;
+      color: #95d5b2;
+    }
+    .message.error {
+      background: #5c1a1a;
+      color: #ff8585;
+    }
+    .result-link {
+      margin-top: 0.5rem;
+      word-break: break-all;
+    }
+    .result-link a {
+      color: #e94560;
+    }
+    #loginSection, #createSection {
+      display: none;
+    }
+    #loginSection.active, #createSection.active {
+      display: block;
+    }
+    .slug-preview {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Link Shortener</h1>
+
+    <div id="loginSection" class="active">
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="password">Admin Password</label>
+          <input type="password" id="password" placeholder="Enter password" required>
+        </div>
+        <button type="submit">Login</button>
+        <div id="loginMessage"></div>
+      </form>
+    </div>
+
+    <div id="createSection">
+      <form id="createForm">
+        <div class="form-group">
+          <label for="url">Original URL</label>
+          <input type="url" id="url" placeholder="https://example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="slug">Custom Slug</label>
+          <input type="text" id="slug" placeholder="my-custom-slug" pattern="^[a-zA-Z0-9_-]+$" required>
+          <div class="slug-preview" id="slugPreview"></div>
+        </div>
+        <button type="submit">Create Short Link</button>
+        <div id="createMessage"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const loginSection = document.getElementById('loginSection');
+    const createSection = document.getElementById('createSection');
+    const loginForm = document.getElementById('loginForm');
+    const createForm = document.getElementById('createForm');
+    const loginMessage = document.getElementById('loginMessage');
+    const createMessage = document.getElementById('createMessage');
+    const slugInput = document.getElementById('slug');
+    const slugPreview = document.getElementById('slugPreview');
+
+    let authToken = sessionStorage.getItem('authToken');
+
+    if (authToken) {
+      loginSection.classList.remove('active');
+      createSection.classList.add('active');
+    }
+
+    slugInput.addEventListener('input', () => {
+      const slug = slugInput.value.trim();
+      if (slug) {
+        slugPreview.textContent = `Preview: ${window.location.origin}/${slug}`;
+      } else {
+        slugPreview.textContent = '';
+      }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/admin/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          authToken = data.token;
+          sessionStorage.setItem('authToken', authToken);
+          loginSection.classList.remove('active');
+          createSection.classList.add('active');
+          loginMessage.innerHTML = '';
+        } else {
+          loginMessage.innerHTML = `<div class="message error">${data.error}</div>`;
+        }
+      } catch (err) {
+        loginMessage.innerHTML = `<div class="message error">Connection error</div>`;
+      }
+    });
+
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = document.getElementById('url').value;
+      const slug = document.getElementById('slug').value.trim();
+
+      try {
+        const res = await fetch('/admin/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ url, slug })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          createMessage.innerHTML = `
+            <div class="message success">
+              Link created successfully!
+              <div class="result-link">
+                <a href="${data.short_url}" target="_blank">${data.short_url}</a>
+              </div>
+            </div>
+          `;
+          createForm.reset();
+          slugPreview.textContent = '';
+        } else {
+          if (res.status === 401) {
+            sessionStorage.removeItem('authToken');
+            authToken = null;
+            loginSection.classList.add('active');
+            createSection.classList.remove('active');
+            loginMessage.innerHTML = `<div class="message error">Session expired. Please login again.</div>`;
+          } else {
+            createMessage.innerHTML = `<div class="message error">${data.error}</div>`;
+          }
+        }
+      } catch (err) {
+        createMessage.innerHTML = `<div class="message error">Connection error</div>`;
+      }
+    });
+  </script>
+</body>
+</html>
