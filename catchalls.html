@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch-All Email Guides — BlackBox Files</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700&family=Instrument+Serif:ital@0;1&display=swap');
+
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+    :root {
+      --bg: #0a0a0b;
+      --surface: #131316;
+      --surface-hover: #1a1a1f;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text: #e8e6e3;
+      --text-muted: #7a7872;
+      --accent: #d4a853;
+      --accent-glow: rgba(212,168,83,0.15);
+      --tool-accent: #5ce0d2;
+      --tool-glow: rgba(92,224,210,0.12);
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top gradient wash */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140%;
+      height: 70%;
+      background: radial-gradient(ellipse at center, rgba(212,168,83,0.06) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 80px 24px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Logo mark */
+    .logo {
+      width: 56px;
+      height: 56px;
+      border: 1.5px solid var(--border-hover);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(212,168,83,0.05) 100%);
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .logo svg {
+      width: 26px;
+      height: 26px;
+      opacity: 0.85;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeDown 0.6s ease 0.1s both;
+    }
+
+    .header h1 {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      font-size: 2.2rem;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      color: #f0ede8;
+    }
+
+    .header h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .header p {
+      font-size: 0.925rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 340px;
+      margin: 0 auto;
+      font-weight: 300;
+    }
+
+    /* Link cards */
+    .links {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .link-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      padding: 18px 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .link-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border-radius: 14px;
+    }
+
+    .link-card.guide::before {
+      background: linear-gradient(135deg, var(--accent-glow), transparent 60%);
+    }
+
+    .link-card.tool::before {
+      background: linear-gradient(135deg, var(--tool-glow), transparent 60%);
+    }
+
+    .link-card:hover {
+      border-color: var(--border-hover);
+      background: var(--surface-hover);
+      transform: translateY(-2px);
+    }
+
+    .link-card:hover::before {
+      opacity: 1;
+    }
+
+    .link-card:active {
+      transform: translateY(0);
+    }
+
+    .link-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .guide .link-icon {
+      background: rgba(212,168,83,0.1);
+      border: 1px solid rgba(212,168,83,0.15);
+    }
+
+    .tool .link-icon {
+      background: rgba(92,224,210,0.1);
+      border: 1px solid rgba(92,224,210,0.15);
+    }
+
+    .link-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .guide .link-icon svg { color: var(--accent); }
+    .tool .link-icon svg { color: var(--tool-accent); }
+
+    .link-content {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .link-content .title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+      letter-spacing: -0.01em;
+    }
+
+    .link-content .subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    .link-arrow {
+      flex-shrink: 0;
+      opacity: 0.3;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .link-card:hover .link-arrow {
+      opacity: 0.7;
+      transform: translateX(3px);
+    }
+
+    .link-arrow svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Divider before tool card */
+    .divider {
+      width: 40px;
+      height: 1px;
+      background: var(--border);
+      margin: 8px auto;
+      animation: fadeDown 0.6s ease 0.55s both;
+    }
+
+    /* Tool badge */
+    .tool .link-content .title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 500;
+      background: rgba(92,224,210,0.1);
+      color: var(--tool-accent);
+      border: 1px solid rgba(92,224,210,0.12);
+    }
+
+    /* Staggered animation */
+    .link-card:nth-child(1) { animation: fadeUp 0.5s ease 0.2s both; }
+    .link-card:nth-child(2) { animation: fadeUp 0.5s ease 0.3s both; }
+    .link-card:nth-child(3) { animation: fadeUp 0.5s ease 0.4s both; }
+    .link-card.tool       { animation: fadeUp 0.5s ease 0.6s both; }
+
+    /* Footer */
+    .footer {
+      margin-top: 56px;
+      text-align: center;
+      animation: fadeDown 0.6s ease 0.7s both;
+    }
+
+    .footer span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.5;
+      letter-spacing: 0.04em;
+      font-weight: 300;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 520px) {
+      .container { padding: 60px 20px 48px; }
+      .header h1 { font-size: 1.85rem; }
+      .link-card { padding: 16px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <path d="M8 12h8M12 8v8"/>
+      </svg>
+    </div>
+
+    <div class="header">
+      <h1>Catch-All <em>Email</em> Guides</h1>
+      <p>Set up catch-all emails for your domains with these step-by-step guides.</p>
+    </div>
+
+    <div class="links">
+
+      <a href="https://quirky-kileskus-b26.notion.site/Catch-all-Guide-96efeddb5df94a98975b0a4beb973e24?pvs=4" target="_blank" rel="noopener" class="link-card guide">
+        <div class="link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="link-content">
+          <div class="title">Namecheap Catch-All Guide</div>
+          <div class="subtitle">Domain email forwarding setup</div>
+        </div>
+        <div class="link-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href="https://amenable-velvet-e14.notion.site/Ionos-Catch-All-Guide-e10a517b72ee4eeb866579f4d16dc837" target="_blank" rel="noopener" class="link-card guide">
+        <div class="link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="link-content">
+          <div class="title">IONOS Catch-All Guide</div>
+          <div class="subtitle">IONOS email configuration</div>
+        </div>
+        <div class="link-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href="https://support.apple.com/guide/icloud/allow-all-incoming-emails-mm9ee0680f/icloud" target="_blank" rel="noopener" class="link-card guide">
+        <div class="link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 12c0 4.4-2.5 7.5-5.5 7.5S6.5 16.4 6.5 12 9 4.5 12 4.5s5.5 3.1 5.5 7.5z"/><path d="M12 4.5c1.3-1.5 3-2 4-1.5"/><path d="M14.5 2c.5 0 1.2.3 1.5 1"/>
+          </svg>
+        </div>
+        <div class="link-content">
+          <div class="title">Apple iCloud Catch-All Guide</div>
+          <div class="subtitle">iCloud Mail allow-all setup</div>
+        </div>
+        <div class="link-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <div class="divider"></div>
+
+      <a href="https://sendtestemail.com/" target="_blank" rel="noopener" class="link-card tool">
+        <div class="link-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/>
+          </svg>
+        </div>
+        <div class="link-content">
+          <div class="title">
+            Send Test Email
+            <span class="badge">Tool</span>
+          </div>
+          <div class="subtitle">Verify your catch-all is working</div>
+        </div>
+        <div class="link-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+
+    </div>
+
+    <div class="footer">
+      <span>BlackBox Files</span>
+    </div>
+
+  </div>
+
+</body>
+</html>

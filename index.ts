@@ -228,6 +228,13 @@ app.post('/admin/create', async (c) => {
   }
 })
 
+// Serve catchalls landing page
+app.get('/catchalls', async (c) => {
+  const file = Bun.file('./catchalls.html')
+  const html = await file.text()
+  return c.html(html)
+})
+
 // Redirect to original URL
 app.get('/:code', (c) => {
   const code = c.req.param('code')
