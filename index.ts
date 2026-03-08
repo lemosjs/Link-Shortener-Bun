@@ -97,6 +97,14 @@ function isValidSlug(slug: string): boolean {
   return /^[a-zA-Z0-9_-]+$/.test(slug) && slug.length >= 1 && slug.length <= 50
 }
 
+// Serve logo
+app.get('/logo.webp', async (c) => {
+  const file = Bun.file('./logo.webp')
+  return new Response(file, {
+    headers: { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=86400' }
+  })
+})
+
 // Root endpoint
 app.get('/', (c) => {
   return c.json({
